@@ -39,6 +39,11 @@ options:
                         Threshold for MCS screening (default: 0.7)
 ```
 
+The script accepts the following file formats as query and database files:
+- SDF
+- SMI (with no header and SMILES in the first column)
+- CSV (with a column named "SMILES")
+
 ## Example
 
 ```bash
