@@ -1,6 +1,6 @@
 # MCS_SCREEN
 
-`mcs_screen` is a Python script that utilizes the RDKit library to screen a query file (SDF) against a database file (SDF). It calculates the maximum common substructure (MCS) between the query and the database molecules. If the size of the MCS exceeds a user-defined threshold, the query molecule is written to the output file.
+`mcs_screen` is a Python script that utilizes the RDKit library to screen a query file (SDF) against a database file (SDF). It calculates the maximum common substructure (MCS) between the query and the database molecules. If the size of the MCS does not exceed a user-defined threshold, the query molecule is written to the output file.
 
 This script is particularly useful when you have a set of known inactive molecules (database) and you want to identify potentially active molecules (query) that are dissimilar to the database.
 
