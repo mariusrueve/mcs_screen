@@ -25,12 +25,59 @@ class MCS_Screen:
         if os.path.isfile(self.output_file):
             raise FileExistsError("Output file already exists")
 
-        self.query_mols = [
-            mol for mol in Chem.SDMolSupplier(self.query_file) if mol is not None
-        ]
-        self.database_mols = [
-            mol for mol in Chem.SDMolSupplier(self.database_file) if mol is not None
-        ]
+        # check if extension is .sdf or .csv or .smi
+        # if .csv or .smi assume first column is SMILES
+
+        # get extension of query file
+        self.query_ext = os.path.splitext(self.query_file)[1]
+        self.database_ext = os.path.splitext(self.database_file)[1]
+
+        print("Reading query file: ", self.query_file)
+        if self.query_ext == ".sdf":
+            self.query_mols = [
+                mol for mol in Chem.SDMolSupplier(self.query_file) if mol is not None
+            ]
+        elif self.query_ext == ".csv":
+            self.query_mols = [
+                Chem.MolFromSmiles(line.strip().split(",")[0])
+                for line in open(self.query_file)
+            ]
+        elif self.query_ext == ".smi":
+            self.query_mols = [
+                Chem.MolFromSmiles(line.strip().split()[0])
+                for line in open(self.query_file)
+            ]
+        else:
+            raise ValueError("Query file format not supported")
+        
+        print("Reading database file: ", self.database_file)
+        if self.database_ext == ".sdf":
+            self.database_mols = [
+                mol for mol in Chem.SDMolSupplier(self.database_file) if mol is not None
+            ]
+        elif self.database_ext == ".csv":
+            self.database_mols = [
+                Chem.MolFromSmiles(line.strip().split(",")[0])
+                for line in open(self.database_file)
+            ]
+        elif self.database_ext == ".smi":
+            self.database_mols = [
+                Chem.MolFromSmiles(line.strip().split()[0])
+                for line in open(self.database_file)
+            ]
+        else:
+            raise ValueError("Database file format not supported")
+
+        # remove None values from the lists
+        self.query_mols = [mol for mol in self.query_mols if mol is not None]
+        self.database_mols = [mol for mol in self.database_mols if mol is not None]
+        
+        # self.query_mols = [
+        #     mol for mol in Chem.SDMolSupplier(self.query_file) if mol is not None
+        # ]
+        # self.database_mols = [
+        #     mol for mol in Chem.SDMolSupplier(self.database_file) if mol is not None
+        # ]
 
     def mcs_screen(self, query_mol):
         for db_mol in self.database_mols:
