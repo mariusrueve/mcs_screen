@@ -71,7 +71,7 @@ class MCS_Screen:
         # remove None values from the lists
         self.query_mols = [mol for mol in self.query_mols if mol is not None]
         self.database_mols = [mol for mol in self.database_mols if mol is not None]
-        
+
         # self.query_mols = [
         #     mol for mol in Chem.SDMolSupplier(self.query_file) if mol is not None
         # ]
@@ -103,10 +103,18 @@ class MCS_Screen:
 def main():
     parser = argparse.ArgumentParser(description="MCS Screening")
     parser.add_argument(
-        "-q", "--query", type=str, required=True, help="Path to the query file"
+        "-q",
+        "--query",
+        type=str,
+        required=True,
+        help="Path to the query file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
     )
     parser.add_argument(
-        "-d", "--database", type=str, required=True, help="Path to the database file"
+        "-d",
+        "--database",
+        type=str,
+        required=True,
+        help="Path to the database file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
     )
     parser.add_argument(
         "-o",
