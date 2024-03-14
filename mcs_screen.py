@@ -26,10 +26,6 @@ class MCS_Screen:
             raise FileNotFoundError("Database file not found")
         if os.path.isfile(self.output_file):
             raise FileExistsError("Output file already exists")
-        
-        # create output file if it does not exist
-        with open(self.output_file, "w") as f:
-            pass
 
         # check if extension is .sdf or .csv or .smi
         # if .csv or .smi assume first column is SMILES
@@ -55,7 +51,7 @@ class MCS_Screen:
             ]
         else:
             raise ValueError("Query file format not supported")
-        
+
         print("Reading database file: ", self.database_file)
         if self.database_ext == ".sdf":
             self.database_mols = [
@@ -98,7 +94,7 @@ class MCS_Screen:
                 continue
             if mcs_atoms / db_mol_atoms >= self.threshold:
                 return
-        
+
         # write to output file SD file
         with self.lock:
             try:
@@ -107,7 +103,7 @@ class MCS_Screen:
                     w.write(query_mol)
                     w.flush()
             except Exception as e:
-                print("Error writing to output file: ", e)
+                print(f"Error writing to output file while processing {query_mol}: ", e)
         print("Molecule passed MCS screening: ", Chem.MolToSmiles(query_mol))
 
     def screen(self):
@@ -126,14 +122,14 @@ def main():
         "--query",
         type=str,
         required=True,
-        help="Path to the query file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
+        help="Path to the query file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES.",
     )
     parser.add_argument(
         "-d",
         "--database",
         type=str,
         required=True,
-        help="Path to the database file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
+        help="Path to the database file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES.",
     )
     parser.add_argument(
         "-o",
