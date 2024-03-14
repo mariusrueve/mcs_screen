@@ -51,7 +51,7 @@ class MCS_Screen:
             ]
         else:
             raise ValueError("Query file format not supported")
-        
+
         print("Reading database file: ", self.database_file)
         if self.database_ext == ".sdf":
             self.database_mols = [
@@ -86,7 +86,8 @@ class MCS_Screen:
             mcs = rdFMCS.FindMCS([query_mol, db_mol])
             mcs_atoms = mcs.numAtoms
             db_mol_atoms = db_mol.GetNumAtoms()
-            # TODO: If there exists a small db molecule it will always results in an mcs of the size bigger than 70% of the db molecule
+            # TODO: If there exists a small db molecule it will always results in an mcs of
+            #   the size bigger than 70% of the db molecule
             # TODO: This is not a good way to filter out molecules
 
             # if mcs atoms or db_mol atoms is 0, skip
@@ -94,7 +95,7 @@ class MCS_Screen:
                 continue
             if mcs_atoms / db_mol_atoms >= self.threshold:
                 return
-        
+
         # write to output file SD file
         with self.lock:
             try:
@@ -122,14 +123,16 @@ def main():
         "--query",
         type=str,
         required=True,
-        help="Path to the query file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
+        help="Path to the query file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, "
+             "first column should be SMILES."
     )
     parser.add_argument(
         "-d",
         "--database",
         type=str,
         required=True,
-        help="Path to the database file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, first column should be SMILES."
+        help="Path to the database file. Accepted formats: .sdf, .csv, .smi. If .csv or .smi, "
+             "first column should be SMILES."
     )
     parser.add_argument(
         "-o",
