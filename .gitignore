@@ -1,1 +1,3 @@
 venv/
+mcs_screen.egg-info/
+mcs_screen/__pycache__/
