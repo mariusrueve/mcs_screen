@@ -2,9 +2,10 @@
 import rdkit
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
-import multiprocessing as mp
 import argparse
 import os
+from concurrent.futures import ThreadPoolExecutor
+import threading
 
 # suppress rdkit warnings
 rdkit.RDLogger.DisableLog("rdApp.*")
@@ -16,6 +17,7 @@ class MCS_Screen:
         self.database_file = database_file
         self.output_file = output_file
         self.threshold = threshold
+        self.lock = threading.Lock()
 
         # Check if all files exist and output file does not exist
         if not os.path.isfile(self.query_file):
@@ -24,6 +26,10 @@ class MCS_Screen:
             raise FileNotFoundError("Database file not found")
         if os.path.isfile(self.output_file):
             raise FileExistsError("Output file already exists")
+        
+        # create output file if it does not exist
+        with open(self.output_file, "w") as f:
+            pass
 
         # check if extension is .sdf or .csv or .smi
         # if .csv or .smi assume first column is SMILES
@@ -82,20 +88,33 @@ class MCS_Screen:
     def mcs_screen(self, query_mol):
         for db_mol in self.database_mols:
             mcs = rdFMCS.FindMCS([query_mol, db_mol])
-            if mcs.numAtoms / db_mol.GetNumAtoms() > self.threshold:
+            mcs_atoms = mcs.numAtoms
+            db_mol_atoms = db_mol.GetNumAtoms()
+            # TODO: If there exists a small db molecule it will always results in an mcs of the size bigger than 70% of the db molecule
+            # TODO: This is not a good way to filter out molecules
+
+            # if mcs atoms or db_mol atoms is 0, skip
+            if mcs_atoms == 0 or db_mol_atoms == 0:
+                continue
+            if mcs_atoms / db_mol_atoms >= self.threshold:
                 return
+        
         # write to output file SD file
-        with open(self.output_file, "a") as f:
-            f.write(Chem.MolToMolBlock(query_mol))
-            f.write("\n")
-            f.write("$$$$\n")
+        with self.lock:
+            try:
+                with open(self.output_file, "a") as f:
+                    w = Chem.SDWriter(f)
+                    w.write(query_mol)
+                    w.flush()
+            except Exception as e:
+                print("Error writing to output file: ", e)
         print("Molecule passed MCS screening: ", Chem.MolToSmiles(query_mol))
 
     def screen(self):
         print("Screening molecules using MCS")
-        with mp.Pool(mp.cpu_count()) as pool:
+        with ThreadPoolExecutor(max_workers=None) as pool:
             # pool.map(self.mcs_screen, self.query_mols)
-            for _ in pool.imap_unordered(self.mcs_screen, self.query_mols):
+            for _ in pool.map(self.mcs_screen, self.query_mols):
                 pass
         print("MCS screening complete")
 
