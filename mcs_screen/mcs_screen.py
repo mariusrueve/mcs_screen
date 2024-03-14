@@ -26,10 +26,6 @@ class mcs_screen:
         if os.path.isfile(self.output_file):
             raise FileExistsError("Output file already exists")
 
-        # create output file if it does not exist
-        with open(self.output_file, "w") as f:
-            pass
-
         # check if extension is .sdf or .csv or .smi
         # if .csv or .smi assume first column is SMILES
 
@@ -100,10 +96,14 @@ class mcs_screen:
                     w.write(query_mol)
                     w.flush()
             except Exception as e:
-                print("Error writing to output file: ", e)
+                print(
+                    f"Error writing to output file while processing \
+                    {Chem.MolToSmiles(query_mol)}: ",
+                    e,
+                )
         print("Molecule passed MCS screening: ", Chem.MolToSmiles(query_mol))
 
-    def multithreading(self):
+    def start(self):
         print("Screening molecules using MCS")
         with ThreadPoolExecutor(max_workers=None) as pool:
             # pool.map(self.mcs_screen, self.query_mols)
