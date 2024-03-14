@@ -20,4 +20,4 @@ jobs:
         pip install black
     - name: Analysing the code with black
       run: |
-        black --quiet mcs_screen.py
+        black --check mcs_screen.py
