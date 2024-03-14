@@ -10,7 +10,7 @@ def main():
         type=str,
         required=True,
         help="Path to the query file. Accepted formats: .sdf, .csv, .smi."
-             "If .csv or .smi, first column should be SMILES.",
+        "If .csv or .smi, first column should be SMILES.",
     )
     parser.add_argument(
         "-d",
@@ -18,7 +18,7 @@ def main():
         type=str,
         required=True,
         help="Path to the database file. Accepted formats: .sdf, .csv, .smi."
-             "If .csv or .smi, first column should be SMILES.",
+        "If .csv or .smi, first column should be SMILES.",
     )
     parser.add_argument(
         "-o",
@@ -39,7 +39,7 @@ def main():
     args = parser.parse_args()
 
     screen = mcs_screen(args.query, args.database, args.output, args.threshold)
-    screen.multithreading()
+    screen.start()
 
 
 if __name__ == "__main__":
