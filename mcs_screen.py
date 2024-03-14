@@ -26,10 +26,6 @@ class MCS_Screen:
             raise FileNotFoundError("Database file not found")
         if os.path.isfile(self.output_file):
             raise FileExistsError("Output file already exists")
-        
-        # create output file if it does not exist
-        with open(self.output_file, "w") as f:
-            pass
 
         # check if extension is .sdf or .csv or .smi
         # if .csv or .smi assume first column is SMILES
@@ -107,7 +103,7 @@ class MCS_Screen:
                     w.write(query_mol)
                     w.flush()
             except Exception as e:
-                print("Error writing to output file: ", e)
+                print(f"Error writing to output file while processing {query_mol}: ", e)
         print("Molecule passed MCS screening: ", Chem.MolToSmiles(query_mol))
 
     def screen(self):
