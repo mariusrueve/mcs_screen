@@ -20,11 +20,11 @@ class mcs_screen:
 
         # Check if all files exist and output file does not exist
         if not os.path.isfile(self.query_file):
-            raise FileNotFoundError("Query file not found")
+            raise FileNotFoundError(f"Query file {self.query_file} not found")
         if not os.path.isfile(self.database_file):
-            raise FileNotFoundError("Database file not found")
+            raise FileNotFoundError(f"Database file {self.database_file} not found")
         if os.path.isfile(self.output_file):
-            raise FileExistsError("Output file already exists")
+            raise FileExistsError(f"Output file {self.output_file} already exists")
 
         # check if extension is .sdf or .csv or .smi
         # if .csv or .smi assume first column is SMILES
