@@ -22,7 +22,7 @@ pip install -r requirements.txt
 python mcs_screen.py -h
 ```
 
-```
+```bash
 usage: mcs_screen.py [-h] -q QUERY -d DATABASE [-o OUTPUT] [-t THRESHOLD]
 
 MCS Screening
