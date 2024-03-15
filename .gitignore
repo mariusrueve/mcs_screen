@@ -2,3 +2,4 @@ venv/
 mcs_screen.egg-info/
 mcs_screen/__pycache__/
 mols_passed_screening.sdf
+build/
