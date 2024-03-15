@@ -79,7 +79,7 @@ class mcs_screen:
             if db_mol_atoms == 0:
                 continue
 
-            mcs = rdFMCS.FindMCS([query_mol, db_mol])
+            mcs = rdFMCS.FindMCS([query_mol, db_mol], completeRingsOnly=True, bondCompare=rdFMCS.BondCompare.CompareOrder)
             mcs_atoms = mcs.numAtoms
 
             # if mcs atoms or db_mol atoms is 0, skip
