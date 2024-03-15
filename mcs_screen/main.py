@@ -1,24 +1,27 @@
 import argparse
 from mcs_screen.mcs_screen import mcs_screen
+import os
 
 
 def main():
     parser = argparse.ArgumentParser(description="MCS Screening")
     parser.add_argument(
-        "-q",
-        "--query",
+        "-i",
+        "--input",
         type=str,
         required=True,
-        help="Path to the query file. Accepted formats: .sdf, .csv, .smi."
-        "If .csv or .smi, first column should be SMILES.",
+        help="""Path to the input file.
+        Accepted formats: .sdf, .csv, .smi.
+        If .csv or .smi, first column should be SMILES.""",
     )
     parser.add_argument(
-        "-d",
-        "--database",
+        "-n",
+        "--nonactives",
         type=str,
         required=True,
-        help="Path to the database file. Accepted formats: .sdf, .csv, .smi."
-        "If .csv or .smi, first column should be SMILES.",
+        help="""Path to the non-actives database file.
+        Accepted formats: .sdf, .csv, .smi.
+        If .csv or .smi, first column should be SMILES.""",
     )
     parser.add_argument(
         "-o",
@@ -26,7 +29,8 @@ def main():
         type=str,
         required=False,
         help="Path to the output file (default: mols_passed_screening.sdf)",
-        default="mols_passed_screening.sdf",
+        # default is input file name with _passed.sdf
+        default=None,
     )
     parser.add_argument(
         "-t",
@@ -38,7 +42,17 @@ def main():
     )
     args = parser.parse_args()
 
-    screen = mcs_screen(args.query, args.database, args.output, args.threshold)
+    # create output file passed and not passed. If not provided, use input file name
+    if args.output is None:
+        passed_path = os.path.splitext(args.input)[0] + "_passed.sdf"
+        not_passed_path = os.path.splitext(args.input)[0] + "_not_passed.csv"
+    else:
+        passed_path = args.output
+        not_passed_path = os.path.splitext(args.output)[0] + "_not_passed.csv"
+
+    screen = mcs_screen(
+        args.input, args.nonactives, passed_path, not_passed_path, args.threshold
+    )
     screen.start()
 
 
