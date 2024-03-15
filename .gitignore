@@ -3,3 +3,5 @@ mcs_screen.egg-info/
 mcs_screen/__pycache__/
 mols_passed_screening.sdf
 build/
+test_data/*passed.sdf
+test_data/*passed.csv
