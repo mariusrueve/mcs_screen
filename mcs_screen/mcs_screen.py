@@ -1,86 +1,56 @@
 #!/usr/bin/env python
+import threading
+from concurrent.futures import ThreadPoolExecutor
+
 import rdkit
+from mcs_screen.file_parser import (
+    read_molecules,
+    write_passed_mol,
+    write_failed_mol,
+    check_output_path,
+)
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
-import os
-from concurrent.futures import ThreadPoolExecutor
-import threading
 
 # suppress rdkit warnings
 rdkit.RDLogger.DisableLog("rdApp.*")
 
 
 class mcs_screen:
-    def __init__(self, query_file, database_file, output_file, threshold):
-        self.query_file = query_file
-        self.database_file = database_file
-        self.output_file = output_file
+    def __init__(
+        self, input_file, nonactives_file, passed_file, not_passed_file, threshold
+    ):
+        self.input_file = input_file
+        self.nonactives_file = nonactives_file
+        self.passed_file = passed_file
+        self.not_passed_file = not_passed_file
+
+        # check if output files exists
+        check_output_path(self.passed_file, "passed")
+        check_output_path(self.not_passed_file, "not passed")
+
+        self.passed_file_writer = Chem.SDWriter(self.passed_file)
+
         self.threshold = threshold
         self.lock = threading.Lock()
 
-        # Check if all files exist and output file does not exist
-        if not os.path.isfile(self.query_file):
-            raise FileNotFoundError(f"Query file {self.query_file} not found")
-        if not os.path.isfile(self.database_file):
-            raise FileNotFoundError(f"Database file {self.database_file} not found")
-        if os.path.isfile(self.output_file):
-            raise FileExistsError(f"Output file {self.output_file} already exists")
+        self.input_mols = []
+        self.nonactive_mols = []
 
-        # check if extension is .sdf or .csv or .smi
-        # if .csv or .smi assume first column is SMILES
+        print("Reading query file: ", self.input_file)
+        self.input_mols = read_molecules(self.input_file)
 
-        # get extension of query file
-        self.query_ext = os.path.splitext(self.query_file)[1]
-        self.database_ext = os.path.splitext(self.database_file)[1]
+        print("Reading database file: ", self.nonactives_file)
+        self.nonactive_mols = read_molecules(self.nonactives_file)
 
-        print("Reading query file: ", self.query_file)
-        if self.query_ext == ".sdf":
-            self.query_mols = [
-                mol for mol in Chem.SDMolSupplier(self.query_file) if mol is not None
-            ]
-        elif self.query_ext == ".csv":
-            self.query_mols = [
-                Chem.MolFromSmiles(line.strip().split(",")[0])
-                for line in open(self.query_file)
-            ]
-        elif self.query_ext == ".smi":
-            self.query_mols = [
-                Chem.MolFromSmiles(line.strip().split()[0])
-                for line in open(self.query_file)
-            ]
-        else:
-            raise ValueError("Query file format not supported")
-
-        print("Reading database file: ", self.database_file)
-        if self.database_ext == ".sdf":
-            self.database_mols = [
-                mol for mol in Chem.SDMolSupplier(self.database_file) if mol is not None
-            ]
-        elif self.database_ext == ".csv":
-            self.database_mols = [
-                Chem.MolFromSmiles(line.strip().split(",")[0])
-                for line in open(self.database_file)
-            ]
-        elif self.database_ext == ".smi":
-            self.database_mols = [
-                Chem.MolFromSmiles(line.strip().split()[0])
-                for line in open(self.database_file)
-            ]
-        else:
-            raise ValueError("Database file format not supported")
-
-        # remove None values from the lists
-        self.query_mols = [mol for mol in self.query_mols if mol is not None]
-        self.database_mols = [mol for mol in self.database_mols if mol is not None]
-
-    def screening(self, query_mol):
-        for db_mol in self.database_mols:
-            db_mol_atoms = db_mol.GetNumAtoms()
-            if db_mol_atoms == 0:
+    def screening(self, input_mol):
+        for nonactive in self.nonactive_mols:
+            nonactive_atoms = nonactive.GetNumAtoms()
+            if nonactive_atoms == 0:
                 continue
 
             mcs = rdFMCS.FindMCS(
-                [query_mol, db_mol],
+                [input_mol, nonactive],
                 completeRingsOnly=True,
                 bondCompare=rdFMCS.BondCompare.CompareOrder,
             )
@@ -89,28 +59,24 @@ class mcs_screen:
             # if mcs atoms or db_mol atoms is 0, skip
             if mcs_atoms < 6:
                 continue
-            if mcs_atoms / db_mol_atoms >= self.threshold:
+            if mcs_atoms / nonactive_atoms >= self.threshold:
+                with self.lock:
+                    write_failed_mol(
+                        input_mol,
+                        nonactive,
+                        self.not_passed_file,
+                    )
                 return
 
         # write to output file SD file
         with self.lock:
-            try:
-                with open(self.output_file, "a") as f:
-                    w = Chem.SDWriter(f)
-                    w.write(query_mol)
-                    w.flush()
-            except Exception as e:
-                print(
-                    f"Error writing to output file while processing \
-                    {Chem.MolToSmiles(query_mol)}: ",
-                    e,
-                )
-        print("Molecule passed MCS screening: ", Chem.MolToSmiles(query_mol))
+            write_passed_mol(input_mol, self.passed_file, self.passed_file_writer)
+        print("Molecule passed MCS screening: ", input_mol.GetProp("SMILES"))
 
     def start(self):
         print("Screening molecules using MCS")
         with ThreadPoolExecutor(max_workers=None) as pool:
             # pool.map(self.mcs_screen, self.query_mols)
-            for _ in pool.map(self.screening, self.query_mols):
+            for _ in pool.map(self.screening, self.input_mols):
                 pass
         print("MCS screening complete")
