@@ -45,21 +45,37 @@ class mcs_screen:
 
     def screening(self, input_mol):
         for nonactive in self.nonactive_mols:
+            input_atoms = input_mol.GetNumAtoms()
             nonactive_atoms = nonactive.GetNumAtoms()
-            if nonactive_atoms == 0:
+            if nonactive_atoms == 0 or input_atoms == 0:
                 continue
 
             mcs = rdFMCS.FindMCS(
                 [input_mol, nonactive],
                 completeRingsOnly=True,
-                bondCompare=rdFMCS.BondCompare.CompareOrder,
+                bondCompare=rdFMCS.BondCompare.CompareAny,
+                timeout=60,
             )
             mcs_atoms = mcs.numAtoms
 
             # if mcs atoms or db_mol atoms is 0, skip
             if mcs_atoms < 6:
                 continue
-            if mcs_atoms / nonactive_atoms >= self.threshold:
+            if (
+                nonactive_atoms > input_atoms
+                and mcs_atoms / nonactive_atoms >= self.threshold
+            ):
+                with self.lock:
+                    write_failed_mol(
+                        input_mol,
+                        nonactive,
+                        self.not_passed_file,
+                    )
+                return
+            elif (
+                input_atoms > nonactive_atoms
+                and mcs_atoms / input_atoms >= self.threshold
+            ):
                 with self.lock:
                     write_failed_mol(
                         input_mol,
