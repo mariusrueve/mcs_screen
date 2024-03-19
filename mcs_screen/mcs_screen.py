@@ -52,7 +52,9 @@ class mcs_screen:
 
             mcs = rdFMCS.FindMCS(
                 [input_mol, nonactive],
-                completeRingsOnly=True,
+                ringMatchesRingOnly=True,
+                completeRingsOnly=False,
+                atomCompare=rdFMCS.AtomCompare.CompareIsotopes,
                 bondCompare=rdFMCS.BondCompare.CompareAny,
                 timeout=60,
             )
