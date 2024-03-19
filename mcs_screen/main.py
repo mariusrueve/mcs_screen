@@ -28,7 +28,8 @@ def main():
         "--output",
         type=str,
         required=False,
-        help="Path to the output file (default: mols_passed_screening.sdf)",
+        help="""Path to the output file with .csv or .sdf extension
+        (default: mols_passed_screening.csv)""",
         # default is input file name with _passed.sdf
         default=None,
     )
@@ -37,14 +38,15 @@ def main():
         "--threshold",
         type=float,
         required=False,
-        help="Threshold for MCS screening (default: 0.7)",
+        help="""Threshold for MCS screening. Increase to filter out less molecules
+        ,decrease to filter out more molecules (default: 0.7)""",
         default=0.7,
     )
     args = parser.parse_args()
 
     # create output file passed and not passed. If not provided, use input file name
     if args.output is None:
-        passed_path = os.path.splitext(args.input)[0] + "_passed.sdf"
+        passed_path = os.path.splitext(args.input)[0] + "_passed.csv"
         not_passed_path = os.path.splitext(args.input)[0] + "_not_passed.csv"
     else:
         passed_path = args.output
