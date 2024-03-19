@@ -21,6 +21,12 @@ def read_molecules(file):
     # add smiles to the molecule properties
     for mol in mols:
         mol.SetProp("SMILES", Chem.MolToSmiles(mol))
+
+    for mol in mols:
+        for atom in mol.GetAtoms():
+            value = 500 * atom.GetIsAromatic() + atom.GetAtomicNum()
+            atom.SetIsotope(value)
+
     return mols
 
 
