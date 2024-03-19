@@ -43,6 +43,16 @@ def write_passed_mol(mol, file, writer):
                     {mol.GetProp('SMILES')}: ",
                 e,
             )
+    elif ext == ".csv":
+        try:
+            with open(file, "a") as f:
+                f.write(f"{mol.GetProp('SMILES')}\n")
+        except Exception as e:
+            print(
+                f"Error writing to output file while processing \
+                    {mol.GetProp('SMILES')}: ",
+                e,
+            )
     else:
         raise ValueError(f"File format {ext} not supported")
 
@@ -74,8 +84,12 @@ def check_output_path(file, mode):
         if mode == "passed":
             if os.path.splitext(file)[1] == ".sdf":
                 return file
+            elif os.path.splitext(file)[1] == ".csv":
+                return file
             else:
-                raise ValueError(f"Output file {file} should have .sdf extension")
+                raise ValueError(
+                    f"Output file {file} should have .sdf or .csv extension"
+                )
         elif mode == "not_passed":
             if os.path.splitext(file)[1] == ".csv":
                 return file
