@@ -9,6 +9,8 @@ from mcs_screen.file_parser import (
     write_failed_mol,
     check_output_path,
 )
+from mcs_screen.input_reader import InputReader
+
 from rdkit import Chem
 from rdkit.Chem import rdFMCS
 
@@ -34,16 +36,16 @@ class mcs_screen:
         self.threshold = threshold
         self.lock = threading.Lock()
 
-        self.input_mols = []
+        self.input_mols_reader = InputReader(self.input_file)
         self.nonactive_mols = []
-
-        print("Reading query file: ", self.input_file)
-        self.input_mols = read_molecules(self.input_file)
 
         print("Reading database file: ", self.nonactives_file)
         self.nonactive_mols = read_molecules(self.nonactives_file)
 
-    def screening(self, input_mol):
+    def screening(self):
+        with self.lock:
+            input_mol = next(self.input_mols_reader)
+            print("Screening molecule: ", input_mol.GetProp("SMILES"))
         for nonactive in self.nonactive_mols:
             input_atoms = input_mol.GetNumAtoms()
             nonactive_atoms = nonactive.GetNumAtoms()
@@ -94,7 +96,10 @@ class mcs_screen:
     def start(self):
         print("Screening molecules using MCS")
         with ThreadPoolExecutor(max_workers=None) as pool:
-            # pool.map(self.mcs_screen, self.query_mols)
-            for _ in pool.map(self.screening, self.input_mols):
-                pass
+            # start screening with multiple threads
+            while True:
+                try:
+                    pool.submit(self.screening)
+                except StopIteration:
+                    break
         print("MCS screening complete")

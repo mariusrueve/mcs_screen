@@ -28,6 +28,7 @@ class InputReader:
 
     def __init__(self, input_file):
         self.input_file = input_file
+        print("Reading input file: ", self.input_file)
         self.ext = self.get_extension()
         self.reader = self.get_reader()
 
@@ -120,3 +121,15 @@ class InputReader:
 
     def __repr__(self):
         return f"InputReader({self.input_file})"
+
+
+def main():
+    input_file = "test_data/45k.sdf"
+    reader = InputReader(input_file)
+    print(reader)
+    for i in range(9):
+        print(next(reader).GetProp("SMILES"))
+
+
+if __name__ == "__main__":
+    main()
